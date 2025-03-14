@@ -1,45 +1,46 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
-##############################################
-# 任务1：无向图的基本搜索和连通性问题
-##############################################
+
+# Task 1: Basic Search and Connectivity in an Undirected Graph
+
 
 def task1():
-    print("=== 任务1：无向图的搜索和连通性 ===")
-    # 构造一个无向图，包含两个连通分量
-    # 连通分量1: A, B, C, D
-    # 连通分量2: E, F
+    print("=== Task 1: Search and Connectivity in an Undirected Graph ===")
+    # Construct an undirected graph with two connected components
+    # Connected component 1: A, B, C, D
+    # Connected component 2: E, F
     G = nx.Graph()
-    # 添加边：连通分量1
+    # Add edges for connected component 1
     G.add_edges_from([('A', 'B'), ('A', 'C'), ('B', 'D'), ('C', 'D')])
-    # 添加边：连通分量2
+    # Add edge for connected component 2
     G.add_edge('E', 'F')
     
-    # (a) 从任一顶点出发的 DFS 与 BFS 能否找到图中的所有连通分量？
-    # 直接从一个顶点（例如'A'）出发，DFS 或 BFS 只能遍历所在连通分量
+    # (a) Can DFS and BFS starting from any vertex find all connected components?
+    # Starting from a single vertex (for example, 'A'), DFS or BFS only traverses the component that contains that vertex.
     start_node = 'A'
     dfs_nodes = list(nx.dfs_preorder_nodes(G, source=start_node))
     bfs_nodes = list(nx.bfs_tree(G, source=start_node).nodes())
-    print("从节点 {} 出发的 DFS 遍历结果: {}".format(start_node, dfs_nodes))
-    print("从节点 {} 出发的 BFS 遍历结果: {}".format(start_node, bfs_nodes))
-    # 要得到所有连通分量需要遍历所有未访问过的节点，可用 nx.connected_components(G)
+    print("DFS traversal starting from node {}: {}".format(start_node, dfs_nodes))
+    print("BFS traversal starting from node {}: {}".format(start_node, bfs_nodes))
+    # To obtain all connected components, traverse all unvisited nodes, e.g., using nx.connected_components(G)
     all_components = list(nx.connected_components(G))
-    print("图中所有的连通分量: {}".format(all_components))
-    # 答案：(a) 单个起点的 DFS 或 BFS 只能发现所在连通分量，若图不连通，则需要对所有组件分别搜索。
+    print("All connected components in the graph: {}".format(all_components))
+    # Answer for (a): A DFS or BFS starting from one vertex can only discover its own connected component. 
+    # For a disconnected graph, each component must be searched separately.
     
-    # (b) DFS 与 BFS 是否能判断两个给定节点间是否存在路径？
+    # (b) Can both DFS and BFS determine if there is a path between two given nodes?
     node_u = 'A'
     node_v = 'D'
     has_path = nx.has_path(G, node_u, node_v)
-    print("节点 {} 到 {} 是否存在路径? {}".format(node_u, node_v, has_path))
-    # 进一步展示 DFS 和 BFS 分别找到的路径：
-    # 对于 BFS（找到边数最少的路径）
+    print("Is there a path from node {} to {}? {}".format(node_u, node_v, has_path))
+    # Show the paths found by DFS and BFS:
+    # For BFS (which returns the path with the fewest edges)
     try:
         bfs_path = nx.shortest_path(G, source=node_u, target=node_v, method='bfs')
     except Exception as e:
         bfs_path = None
-    # 对于 DFS，我们自己实现一个简单的递归查找路径函数
+    # For DFS, implement a simple recursive function to find a path
     def dfs_path(graph, current, target, visited=None, path=None):
         if visited is None:
             visited = set()
@@ -57,81 +58,82 @@ def task1():
         return None
 
     dfs_found_path = dfs_path(G, node_u, node_v)
-    print("使用 DFS 搜索到的 {} 到 {} 的路径: {}".format(node_u, node_v, dfs_found_path))
-    print("使用 BFS 搜索到的 {} 到 {} 的路径: {}".format(node_u, node_v, bfs_path))
-    # 答案：(b) 都可以判断两节点间是否存在路径，并返回一个可行的路径。
+    print("Path from {} to {} found by DFS: {}".format(node_u, node_v, dfs_found_path))
+    print("Path from {} to {} found by BFS: {}".format(node_u, node_v, bfs_path))
+    # Answer for (b): Both methods can determine if there is a path between two nodes and return a valid path.
     
-    # (c) 若 u 与 v 间存在路径，从 u 开始的 DFS 与 BFS 是否总能找到完全相同的路径？
+    # (c) If there is a path between vertices u and v, will the DFS and BFS starting from u always return exactly the same path?
     same_path = (dfs_found_path == bfs_path)
-    print("DFS 与 BFS 返回的路径是否完全相同？ {}".format(same_path))
-    print("注：DFS 搜索的路径依赖于遍历顺序，BFS 返回的是边数最少的路径，因此一般不相同。")
+    print("Are the paths returned by DFS and BFS identical? {}".format(same_path))
+    print("Note: The DFS path depends on the order of traversal, while BFS returns the path with the fewest edges, so they are generally not the same.")
     
-    # 绘制无向图
+    # Plot the undirected graph
     pos = nx.spring_layout(G)
     nx.draw(G, pos, with_labels=True, node_color='lightblue', edge_color='gray')
-    plt.title("任务1：无向图示意图")
+    plt.title("Task 1: Undirected Graph")
     plt.show()
 
 
-##############################################
-# 任务2：有向图的强连通分量及元图
-##############################################
+
+
+# Task 2: Strongly Connected Components and Meta Graph in a Directed Graph
+
 
 def task2():
-    print("\n=== 任务2：有向图的强连通分量与元图 ===")
-    # 构造一个有向图
-    # 节点：A, B, C, D, E, F
-    # 边的设计使得:
-    #   {A, B, C} 形成一个强连通分量 (A->B, B->C, C->A)
-    #   {D, E} 形成一个强连通分量 (D->E, E->D)
-    #   F 为孤立点（单独的强连通分量）
-    # 同时 A->B->D->E->F 构成图的连接结构
+    print("\n=== Task 2: Strongly Connected Components and Meta Graph of a Directed Graph ===")
+    # Construct a directed graph
+    # Nodes: A, B, C, D, E, F
+    # The edges are designed so that:
+    #   {A, B, C} form a strongly connected component (A->B, B->C, C->A)
+    #   {D, E} form a strongly connected component (D->E, E->D)
+    #   F is an isolated component (its own strongly connected component)
+    # Also, A->B->D->E->F establishes the connectivity of the graph.
     DG = nx.DiGraph()
-    # 添加强连通分量 {A, B, C}
+    # Add edges for strongly connected component {A, B, C}
     DG.add_edges_from([('A', 'B'), ('B', 'C'), ('C', 'A')])
-    # 连接到下一个部分
+    # Connect to the next part
     DG.add_edge('B', 'D')
-    # 强连通分量 {D, E}
+    # Add edges for strongly connected component {D, E}
     DG.add_edges_from([('D', 'E'), ('E', 'D')])
-    # 从 E 指向 F（F 为单独的强连通分量）
+    # Edge from E to F (F is an isolated strongly connected component)
     DG.add_edge('E', 'F')
     
-    # (a) 计算有向图的强连通分量
+    # (a) Compute the strongly connected components of the directed graph
     scc = list(nx.strongly_connected_components(DG))
-    print("强连通分量: {}".format(scc))
+    print("Strongly connected components: {}".format(scc))
     
-    # (b) 利用强连通分量构造元图
-    # NetworkX 提供 condensation 方法，其返回的图即为元图（每个节点代表一个 SCC）
+    # (b) Construct the meta graph using the strongly connected components
+    # NetworkX provides the condensation method, which returns the meta graph (each node represents an SCC)
     C = nx.condensation(DG, scc=scc)
-    print("元图（Condensation Graph）的节点: ", C.nodes(data=True))
-    print("元图的边: ", list(C.edges()))
-    # (c) 对元图进行拓扑排序（元图一定是 DAG）
+    print("Meta graph (Condensation Graph) nodes: ", C.nodes(data=True))
+    print("Meta graph edges: ", list(C.edges()))
+    # (c) Perform a topological sort on the meta graph (the meta graph is a DAG)
     topo_order = list(nx.topological_sort(C))
-    print("元图拓扑排序的结果: {}".format(topo_order))
+    print("Topological order of the meta graph: {}".format(topo_order))
     
-    # 绘制原始有向图
+    # Plot the original directed graph
     pos = nx.spring_layout(DG)
     nx.draw(DG, pos, with_labels=True, node_color='lightgreen', arrowstyle='->', arrowsize=15)
-    plt.title("任务2：原始有向图")
+    plt.title("Task 2: Original Directed Graph")
     plt.show()
     
-    # 绘制元图
+    # Plot the meta graph
     pos_meta = nx.spring_layout(C)
     labels = {node: data['members'] for node, data in C.nodes(data=True)}
     nx.draw(C, pos_meta, with_labels=True, labels=labels, node_color='lightcoral', arrowstyle='->', arrowsize=15)
-    plt.title("任务2：元图 (Condensation Graph)")
+    plt.title("Task 2: Meta Graph (Condensation Graph)")
     plt.show()
 
 
-##############################################
-# 任务3：带权图的最短路径树与最小生成树
-##############################################
+
+# Task 3: Shortest Path Tree and Minimum Spanning Tree in a Weighted Graph
+
 
 def task3():
-    print("\n=== 任务3：带权图的最短路径树与最小生成树 ===")
-    # 构造一个带权无向图
-    # 节点: A, B, C, D, E
-    # 边及其权重:
+    print("\n=== Task 3: Shortest Path Tree and Minimum Spanning Tree of a Weighted Graph ===")
+    # Construct a weighted undirected graph
+    # Nodes: A, B, C, D, E
+    # Edges and their weights:
     # A-B: 2, A-C: 4, B-C: 1, B-D: 7, C-E: 3, D-E: 1
     WG = nx.Graph()
     WG.add_weighted_edges_from([
@@ -143,33 +145,35 @@ def task3():
         ('D', 'E', 1)
     ])
     
-    # (a) 利用 Dijkstra 算法从节点 A 生成最短路径树
+    # (a) Generate the shortest path tree from node A using Dijkstra's algorithm
     source = 'A'
     distances, paths = nx.single_source_dijkstra(WG, source=source)
-    print("从节点 {} 出发的最短路径及距离：".format(source))
+    print("Shortest paths and distances from node {}:".format(source))
     for target in sorted(WG.nodes()):
-        print("到 {} 的距离: {}，路径: {}".format(target, distances[target], paths[target]))
+        print("Distance to {}: {}, Path: {}".format(target, distances[target], paths[target]))
     
-    # (b) 生成最小生成树
+    # (b) Generate the minimum spanning tree (MST)
     mst = nx.minimum_spanning_tree(WG)
-    print("\n最小生成树的边 (边权):")
+    print("\nEdges of the Minimum Spanning Tree (edge weights):")
     for u, v, data in mst.edges(data=True):
         print("{} - {} (weight {})".format(u, v, data['weight']))
     
-    # (c) 对比最短路径树和最小生成树
-    print("\n答案：最短路径树和最小生成树通常不相同。")
-    print("原因：最短路径树保证从起点到各节点的路径代价最小，而最小生成树保证整个图的边权总和最小，两者目标不同。")
+    # (c) Comparison between the shortest path tree and the minimum spanning tree
+    print("\nAnswer: The shortest path tree and the minimum spanning tree are usually not the same.")
+    print("Reason: The shortest path tree ensures the minimum cost path from the source to each node,")
+    print("while the minimum spanning tree minimizes the total edge weight of the graph. Their objectives differ.")
     
-    # (d) 若图中存在负权边，Dijkstra 算法是否适用？
-    print("\n答案：Dijkstra 算法不适用于含负权边的图，因为负权边可能导致错误的最短路径计算。")
+    # (d) If the graph contains an edge with a negative weight, is Dijkstra's algorithm applicable?
+    print("\nAnswer: Dijkstra's algorithm is not applicable to graphs with negative weight edges,")
+    print("because negative weights can lead to incorrect shortest path calculations.")
     
-    # 绘制带权图及其最小生成树
+    # Plot the weighted graph and its minimum spanning tree
     pos = nx.spring_layout(WG)
     edge_labels = nx.get_edge_attributes(WG, 'weight')
     plt.figure()
     nx.draw(WG, pos, with_labels=True, node_color='lightyellow', edge_color='gray')
     nx.draw_networkx_edge_labels(WG, pos, edge_labels=edge_labels)
-    plt.title("任务3：带权图")
+    plt.title("Task 3: Weighted Graph")
     plt.show()
     
     pos_mst = nx.spring_layout(mst)
@@ -177,13 +181,12 @@ def task3():
     nx.draw(mst, pos_mst, with_labels=True, node_color='lightblue', edge_color='black')
     mst_edge_labels = nx.get_edge_attributes(mst, 'weight')
     nx.draw_networkx_edge_labels(mst, pos_mst, edge_labels=mst_edge_labels)
-    plt.title("任务3：最小生成树")
+    plt.title("Task 3: Minimum Spanning Tree")
     plt.show()
 
 
-##############################################
-# 主函数：依次执行各任务
-##############################################
+
+# Main function: Execute all tasks sequentially
 
 def main():
     task1()
